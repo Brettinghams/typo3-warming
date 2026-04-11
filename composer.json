@@ -18,13 +18,19 @@
 		"docs": "https://docs.typo3.org/p/eliashaeussler/typo3-warming/main/en-us/",
 		"rss": "https://github.com/eliashaeussler/typo3-warming/releases.atom"
 	},
+	"repositories": {
+        "eliashaeussler/typo3-sitemap-locator": {
+            "type": "git",
+            "url": "https://github.com/Brettinghams/typo3-sitemap-locator.git"
+        }
+	},
 	"require": {
 		"php": "~8.2.0 || ~8.3.0 || ~8.4.0 || ~8.5.0",
 		"ext-json": "*",
 		"cuyz/valinor": "^2.0",
 		"eliashaeussler/cache-warmup": "^5.0",
 		"eliashaeussler/sse": "^2.0",
-		"eliashaeussler/typo3-sitemap-locator": "^1.0",
+		"eliashaeussler/typo3-sitemap-locator": "dev-feature/t14",
 		"guzzlehttp/guzzle": "^7.10",
 		"guzzlehttp/promises": "^2.0",
 		"mteu/typo3-typed-extconf": "^1.0",
