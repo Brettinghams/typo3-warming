@@ -22,6 +22,10 @@
         "eliashaeussler/typo3-sitemap-locator": {
             "type": "git",
             "url": "https://github.com/Brettinghams/typo3-sitemap-locator.git"
+        },
+        "mteu/typo3-typed-extconf": {
+            "type": "git",
+            "url": "https://github.com/Brettinghams/typo3-typed-extconf.git"
         }
 	},
 	"require": {
@@ -33,7 +37,7 @@
 		"eliashaeussler/typo3-sitemap-locator": "dev-feature/t14",
 		"guzzlehttp/guzzle": "^7.10",
 		"guzzlehttp/promises": "^2.0",
-		"mteu/typo3-typed-extconf": "^1.0",
+		"mteu/typo3-typed-extconf": "dev-feature/t14",
 		"psr/event-dispatcher": "^1.0",
 		"psr/http-message": "^1.1 || ^2.0",
 		"psr/http-server-handler": "^1.0",
