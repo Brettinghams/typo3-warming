@@ -34,7 +34,7 @@
 		"cuyz/valinor": "^2.0",
 		"eliashaeussler/cache-warmup": "^5.0",
 		"eliashaeussler/sse": "^2.0",
-		"eliashaeussler/typo3-sitemap-locator": "dev-feature/t14",
+		"eliashaeussler/typo3-sitemap-locator": "dev-release/14",
 		"guzzlehttp/guzzle": "^7.10",
 		"guzzlehttp/promises": "^2.0",
 		"mteu/typo3-typed-extconf": "dev-feature/t14",
