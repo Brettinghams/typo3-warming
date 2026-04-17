@@ -30,6 +30,8 @@ use EliasHaeussler\Typo3Warming\Domain;
 use EliasHaeussler\Typo3Warming\Event;
 use EliasHaeussler\Typo3Warming\Http;
 use EliasHaeussler\Typo3Warming\Result;
+use EliasHaeussler\Typo3Warming\Security;
+use EliasHaeussler\Typo3Warming\Utility;
 use EliasHaeussler\Typo3Warming\ValueObject;
 use GuzzleHttp\Exception\GuzzleException;
 use Psr\EventDispatcher;
@@ -56,6 +58,7 @@ final readonly class CacheWarmupService
         private EventDispatcher\EventDispatcherInterface $eventDispatcher,
         private Typo3SitemapLocator\Sitemap\SitemapLocator $sitemapLocator,
         private Http\Message\PageUriBuilder $pageUriBuilder,
+        private Security\WarmupPermissionGuard $warmupPermissionGuard,
     ) {
         $this->crawler = $this->configuration->getCrawler();
     }
@@ -75,6 +78,12 @@ final readonly class CacheWarmupService
         ?int $limit = null,
         ?CacheWarmup\Crawler\Strategy\CrawlingStrategy $strategy = null,
     ): Result\CacheWarmupResult {
+        // Deny custom configuration for non-admin users
+        if (Utility\BackendUtility::getBackendUser()?->isAdmin() !== true) {
+            $limit = null;
+            $strategy = null;
+        }
+
         $strategy ??= $this->configuration->crawlingStrategy;
         $cacheWarmer = new CacheWarmup\CacheWarmer(
             $limit ?? $this->configuration->limit,
@@ -94,13 +103,16 @@ final readonly class CacheWarmupService
 
         foreach ($sites as $siteWarmupRequest) {
             foreach ($siteWarmupRequest->getLanguageIds() as $languageId) {
-                $siteLanguage = $siteWarmupRequest->getSite()->getLanguageById($languageId);
-                $sitemaps = $this->sitemapLocator->locateBySite($siteWarmupRequest->getSite(), $siteLanguage);
+                $site = $siteWarmupRequest->getSite();
+                $context = new Security\Context\PermissionContext($languageId);
+
+                if (!$this->warmupPermissionGuard->canWarmupCacheOfSite($site, $context)) {
+                    continue;
+                }
+
+                $sitemaps = $this->sitemapLocator->locateBySite($site, $site->getLanguageById($languageId));
                 $cacheWarmer->addSitemaps(
-                    array_map(
-                        Domain\Model\SiteAwareSitemap::fromLocatedSitemap(...),
-                        $sitemaps,
-                    ),
+                    array_map(Domain\Model\SiteAwareSitemap::fromLocatedSitemap(...), $sitemaps),
                 );
             }
         }
@@ -113,7 +125,14 @@ final readonly class CacheWarmupService
             }
 
             foreach ($languageIds as $languageId) {
-                $uri = $this->pageUriBuilder->build($pageWarmupRequest->getPage(), $languageId);
+                $context = new Security\Context\PermissionContext($languageId);
+                $pageId = $pageWarmupRequest->getPage();
+
+                if (!$this->warmupPermissionGuard->canWarmupCacheOfPage($pageId, $context)) {
+                    continue;
+                }
+
+                $uri = $this->pageUriBuilder->build($pageId, $languageId);
 
                 if ($uri !== null) {
                     $cacheWarmer->addUrl((string)$uri);
@@ -138,8 +157,21 @@ final readonly class CacheWarmupService
         return $result;
     }
 
+    /**
+     * @deprecated since v5.3, use {@see Configuration\Configuration::getCrawler()} instead.
+     * @todo Remove with EXT:warming v6.0
+     */
     public function getCrawler(): CacheWarmup\Crawler\Crawler
     {
+        \trigger_error(
+            \sprintf(
+                'Accessing the current crawler using %s() is deprecated since v5.3 and will be removed in v6.0. Use %s::getCrawler() instead.',
+                __METHOD__,
+                Configuration\Configuration::class,
+            ),
+            E_USER_DEPRECATED,
+        );
+
         return $this->crawler;
     }
 }
